@@ -5,11 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: diabetes-api
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
-      DB_HOST: ${DB_HOST:-db}
+      DB_HOST: ${DB_HOST:-192.168.1.104}
       DB_NAME: ${DB_NAME:-mydb}
       DB_USER: ${DB_USER:-admin}
       DB_PASSWORD: ${DB_PASSWORD:-123456}
@@ -22,26 +19,3 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
-
-  db:
-    image: postgres:16-alpine
-    container_name: diabetes-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME:-mydb}
-      POSTGRES_USER: ${DB_USER:-admin}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-123456}
-    ports:
-      - "${DB_HOST_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-mydb}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
-volumes:
-  postgres_data:
