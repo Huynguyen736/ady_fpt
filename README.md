@@ -4,7 +4,7 @@ Overview
 
 This project is a FastAPI service for diabetes prediction. The deployment below runs:
 - API container on port 8000
-- PostgreSQL container on port 5432
+- PostgreSQL container on internal port 5432 (host port default 5433)
 
 The setup is designed for a Proxmox VM or LXC where Docker is installed.
 
@@ -56,6 +56,7 @@ DB_NAME=mydb
 DB_USER=admin
 DB_PASSWORD=your_strong_password_here
 DB_PORT=5432
+DB_HOST_PORT=5433
 
 5. Build and Run
 

@@ -13,6 +13,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy source code và model
 COPY main.py ./main.py
+COPY README.md ./README.md
 COPY model_with_threshold.pkl ./model_with_threshold.pkl
 
 EXPOSE 8000
