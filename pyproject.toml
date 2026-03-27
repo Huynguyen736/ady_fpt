@@ -1,0 +1,18 @@
+[project]
+name = "diabetes-api"
+version = "0.1.0"
+description = "FastAPI diabetes prediction API"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.0.0",
+    "numpy>=1.26.0",
+    "psycopg2-binary>=2.9.0",
+    "scikit-learn>=1.5.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

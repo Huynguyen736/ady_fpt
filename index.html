@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dự đoán Tiểu Đường</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        #result { margin-top: 20px; padding: 15px; display: none; border-radius: 4px; text-align: center; font-weight: bold; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Nhập thông tin dự đoán</h2>
+    <form id="predictForm">
+        <div class="form-group"><label>Số lần mang thai (Pregnancies)</label><input type="number" step="any" id="Pregnancies" required></div>
+        <div class="form-group"><label>Glucose</label><input type="number" step="any" id="Glucose" required></div>
+        <div class="form-group"><label>Huyết áp (BloodPressure)</label><input type="number" step="any" id="BloodPressure" required></div>
+        <div class="form-group"><label>BMI</label><input type="number" step="any" id="BMI" required></div>
+        <div class="form-group"><label>Chỉ số di truyền (Diabetes Pedigree Function)</label><input type="number" step="any" id="DiabetesPedigreeFunction" required></div>
+        <div class="form-group"><label>Tuổi (Age)</label><input type="number" step="any" id="Age" required></div>
+        
+        <button type="submit">Dự đoán</button>
+    </form>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    document.getElementById('predictForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = '';
+        resultDiv.innerText = 'Đang xử lý...';
+
+        // Lấy dữ liệu từ Form (Đảm bảo tên biến khớp 100% với Backend Pydantic BaseModel)
+        const data = {
+            Pregnancies: parseFloat(document.getElementById('Pregnancies').value) || 0,
+            Glucose: parseFloat(document.getElementById('Glucose').value) || 0,
+            BloodPressure: parseFloat(document.getElementById('BloodPressure').value) || 0,
+            BMI: parseFloat(document.getElementById('BMI').value) || 0,
+            DiabetesPedigreeFunction: parseFloat(document.getElementById('DiabetesPedigreeFunction').value) || 0,
+            Age: parseFloat(document.getElementById('Age').value) || 0
+        };
+
+        try {
+            const response = await fetch('http://localhost:8000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                const outcomeText = result.prediction === 1 ? "Có dấu hiệu tiểu đường" : "Bình thường";
+                resultDiv.className = 'success';
+                resultDiv.innerText = `Kết quả: ${outcomeText} \n(${result.message})`;
+            } else {
+                // In chi tiết lỗi 422 ra màn hình để dễ debug
+                resultDiv.className = 'error';
+                resultDiv.innerText = `Lỗi dữ liệu (422): ${JSON.stringify(result.detail)}`;
+            }
+        } catch (error) {
+            resultDiv.className = 'error';
+            resultDiv.innerText = `Không thể kết nối đến Backend: ${error.message}`;
+        }
+    });
+</script>
+
+</body>
+</html>
