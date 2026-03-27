@@ -3,51 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
     <title>Dự đoán Tiểu Đường</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        button:hover { background-color: #218838; }
-        #result { margin-top: 20px; padding: 15px; display: none; border-radius: 4px; text-align: center; font-weight: bold; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        :root {
+            --bg-1: #f4f7ff;
+            --bg-2: #eaf4ef;
+            --surface: rgba(255, 255, 255, 0.78);
+            --surface-border: rgba(255, 255, 255, 0.55);
+            --text-1: #1f2937;
+            --text-2: #4b5563;
+            --input-border: #d8e0ea;
+            --focus: #0ea5a4;
+            --primary-1: #0f766e;
+            --primary-2: #0ea5a4;
+            --ok-bg: #e8f9ef;
+            --ok-text: #0f5132;
+            --ok-border: #bfe7cc;
+            --err-bg: #ffecec;
+            --err-text: #7a1f1f;
+            --err-border: #f4bbbb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Manrope", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            color: var(--text-1);
+            background:
+                radial-gradient(1200px 700px at 10% 5%, #dff4ff 0%, transparent 55%),
+                radial-gradient(1000px 650px at 95% 100%, #ddf7e9 0%, transparent 60%),
+                linear-gradient(145deg, var(--bg-1), var(--bg-2));
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(2px);
+            opacity: 0.45;
+        }
+
+        body::before {
+            background: conic-gradient(from 120deg, #9be7ff, #8ff4c8, #c8d8ff, #9be7ff);
+            top: -140px;
+            right: -80px;
+            animation: floatA 9s ease-in-out infinite;
+        }
+
+        body::after {
+            background: conic-gradient(from 200deg, #96f0d0, #d8f3ff, #aad3ff, #96f0d0);
+            bottom: -140px;
+            left: -100px;
+            animation: floatB 10s ease-in-out infinite;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: min(560px, 100%);
+            padding: 26px;
+            border-radius: 22px;
+            background: var(--surface);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--surface-border);
+            box-shadow:
+                0 20px 50px rgba(15, 23, 42, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.65);
+            animation: riseIn 0.6s ease-out;
+        }
+
+        .title {
+            margin: 0 0 6px;
+            font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-align: center;
+        }
+
+        .subtitle {
+            margin: 0 0 22px;
+            text-align: center;
+            color: var(--text-2);
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+            animation: fadeUp 0.45s ease both;
+        }
+
+        .field-note {
+            margin: 6px 0 0;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.05s; }
+        .form-group:nth-child(2) { animation-delay: 0.09s; }
+        .form-group:nth-child(3) { animation-delay: 0.13s; }
+        .form-group:nth-child(4) { animation-delay: 0.17s; }
+        .form-group:nth-child(5) { animation-delay: 0.21s; }
+        .form-group:nth-child(6) { animation-delay: 0.25s; }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            font: inherit;
+            color: var(--text-1);
+            background: rgba(255, 255, 255, 0.85);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            font: inherit;
+            color: var(--text-1);
+            background: rgba(255, 255, 255, 0.85);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        input:focus {
+            border-color: var(--focus);
+            box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.16);
+            transform: translateY(-1px);
+        }
+
+        select:focus {
+            border-color: var(--focus);
+            box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 16px;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(15, 118, 110, 0.28);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.33);
+            filter: brightness(1.03);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.75;
+            cursor: not-allowed;
+            filter: saturate(0.7);
+            transform: none;
+        }
+
+        #result {
+            margin-top: 16px;
+            padding: 13px;
+            display: none;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            line-height: 1.45;
+            white-space: pre-line;
+            animation: fadeUp 0.3s ease;
+        }
+
+        .success {
+            background-color: var(--ok-bg);
+            color: var(--ok-text);
+            border: 1px solid var(--ok-border);
+        }
+
+        .error {
+            background-color: var(--err-bg);
+            color: var(--err-text);
+            border: 1px solid var(--err-border);
+        }
+
+        .server-status {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+            font-size: 0.78rem;
+            color: #334155;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f59e0b;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45);
+            animation: pulseWarn 1.8s infinite;
+        }
+
+        .status-dot.online {
+            background: #16a34a;
+            box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45);
+            animation: pulseOk 1.8s infinite;
+        }
+
+        .status-dot.offline {
+            background: #dc2626;
+            box-shadow: none;
+            animation: none;
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 16px;
+            }
+
+            .container {
+                padding: 18px;
+                border-radius: 18px;
+            }
+
+            .server-status {
+                top: 10px;
+                right: 10px;
+                padding: 6px 8px;
+                font-size: 0.72rem;
+            }
+        }
+
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.99);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes floatA {
+            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); }
+            50% { transform: translateY(14px) translateX(-10px) rotate(9deg); }
+        }
+
+        @keyframes floatB {
+            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); }
+            50% { transform: translateY(-12px) translateX(8px) rotate(-8deg); }
+        }
+
+        @keyframes pulseOk {
+            0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45); }
+            70% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+        }
+
+        @keyframes pulseWarn {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+            70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
     </style>
 </head>
 <body>
 
+<div class="server-status" id="serverStatus" aria-live="polite">
+    <span class="status-dot" id="serverDot"></span>
+    <span id="serverText">Server: checking</span>
+</div>
+
 <div class="container">
-    <h2>Nhập thông tin dự đoán</h2>
+    <h2 class="title">Dự đoán Tiểu Đường</h2>
+    <p class="subtitle">Nhập thông tin lâm sàng để nhận đánh giá nhanh từ mô hình.</p>
     <form id="predictForm">
-        <div class="form-group"><label>Số lần mang thai (Pregnancies)</label><input type="number" step="any" id="Pregnancies" required></div>
-        <div class="form-group"><label>Glucose</label><input type="number" step="any" id="Glucose" required></div>
-        <div class="form-group"><label>Huyết áp (BloodPressure)</label><input type="number" step="any" id="BloodPressure" required></div>
-        <div class="form-group"><label>BMI</label><input type="number" step="any" id="BMI" required></div>
-        <div class="form-group"><label>Chỉ số di truyền (Diabetes Pedigree Function)</label><input type="number" step="any" id="DiabetesPedigreeFunction" required></div>
-        <div class="form-group"><label>Tuổi (Age)</label><input type="number" step="any" id="Age" required></div>
+        <div class="grid">
+        <div class="form-group">
+            <label>Số lần mang thai (Pregnancies)</label>
+            <div class="field-row">
+                <select id="PregnanciesPreset" aria-label="Chọn nhanh số lần mang thai" required>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="other">Khác (nhập số)</option>
+                </select>
+                <input type="number" step="any" id="PregnanciesCustom" class="hidden" placeholder="Nhập số lần mang thai" min="0" inputmode="decimal" aria-label="Nhập số lần mang thai" />
+            </div>
+            <p class="field-note">Chọn nhanh hoặc chọn "Khác" để nhập giá trị tùy chỉnh.</p>
+        </div>
+        <div class="form-group"><label>Glucose</label><input type="number" step="any" id="Glucose" required placeholder="Ví dụ: 120" inputmode="decimal"></div>
+        <div class="form-group"><label>Huyết áp (BloodPressure)</label><input type="number" step="any" id="BloodPressure" required placeholder="Ví dụ: 70" inputmode="decimal"></div>
+        <div class="form-group"><label>BMI</label><input type="number" step="any" id="BMI" required placeholder="Ví dụ: 28.5" inputmode="decimal"></div>
+        <div class="form-group"><label>Chỉ số di truyền (Diabetes Pedigree Function)</label><input type="number" step="any" id="DiabetesPedigreeFunction" required placeholder="Ví dụ: 0.5" inputmode="decimal"></div>
+        <div class="form-group"><label>Tuổi (Age)</label><input type="number" step="any" id="Age" required placeholder="Ví dụ: 35" inputmode="decimal"></div>
+        </div>
         
-        <button type="submit">Dự đoán</button>
+        <button type="submit" id="submitBtn">Dự đoán</button>
     </form>
 
     <div id="result"></div>
 </div>
 
 <script>
+    const BACKEND_URL = 'http://localhost:8000';
+    const pregnanciesPreset = document.getElementById('PregnanciesPreset');
+    const pregnanciesCustom = document.getElementById('PregnanciesCustom');
+
+    function syncPregnanciesMode() {
+        const isOther = pregnanciesPreset.value === 'other';
+        pregnanciesCustom.classList.toggle('hidden', !isOther);
+        pregnanciesCustom.required = isOther;
+        if (!isOther) {
+            pregnanciesCustom.value = '';
+        }
+    }
+
+    function getPregnanciesValue() {
+        if (pregnanciesPreset.value === 'other') {
+            return parseFloat(pregnanciesCustom.value) || 0;
+        }
+        return parseFloat(pregnanciesPreset.value) || 0;
+    }
+
+    pregnanciesPreset.addEventListener('change', syncPregnanciesMode);
+    syncPregnanciesMode();
+
+    async function updateServerStatus() {
+        const dot = document.getElementById('serverDot');
+        const text = document.getElementById('serverText');
+
+        try {
+            const res = await fetch(BACKEND_URL, { method: 'GET' });
+            if (res.ok) {
+                dot.className = 'status-dot online';
+                text.innerText = 'Server: online';
+            } else {
+                dot.className = 'status-dot offline';
+                text.innerText = 'Server: offline';
+            }
+        } catch (error) {
+            dot.className = 'status-dot offline';
+            text.innerText = 'Server: offline';
+        }
+    }
+
+    updateServerStatus();
+    setInterval(updateServerStatus, 7000);
+
     document.getElementById('predictForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
         
         const resultDiv = document.getElementById('result');
         resultDiv.style.display = 'block';
         resultDiv.className = '';
         resultDiv.innerText = 'Đang xử lý...';
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Đang dự đoán...';
 
         // Lấy dữ liệu từ Form (Đảm bảo tên biến khớp 100% với Backend Pydantic BaseModel)
         const data = {
-            Pregnancies: parseFloat(document.getElementById('Pregnancies').value) || 0,
+            Pregnancies: getPregnanciesValue(),
             Glucose: parseFloat(document.getElementById('Glucose').value) || 0,
             BloodPressure: parseFloat(document.getElementById('BloodPressure').value) || 0,
             BMI: parseFloat(document.getElementById('BMI').value) || 0,
@@ -56,7 +446,7 @@
         };
 
         try {
-            const response = await fetch('http://localhost:8000/predict', {
+            const response = await fetch(BACKEND_URL + '/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -76,6 +466,9 @@
         } catch (error) {
             resultDiv.className = 'error';
             resultDiv.innerText = `Không thể kết nối đến Backend: ${error.message}`;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Dự đoán';
         }
     });
 </script>
