@@ -378,7 +378,7 @@
 </div>
 
 <script>
-    const BACKEND_URL = 'http://server.nnhlab.io.vn/';
+    const BACKEND_URL = 'https://server.nnhlab.io.vn/';
     const pregnanciesPreset = document.getElementById('PregnanciesPreset');
     const pregnanciesCustom = document.getElementById('PregnanciesCustom');
 
@@ -446,7 +446,7 @@
         };
 
         try {
-            const response = await fetch(BACKEND_URL + '/predict', {
+            const response = await fetch(BACKEND_URL + 'predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
