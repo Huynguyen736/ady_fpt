@@ -19,4 +19,4 @@ COPY model_with_threshold.pkl ./model_with_threshold.pkl
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "diabetes_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
