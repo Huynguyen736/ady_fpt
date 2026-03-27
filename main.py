@@ -6,6 +6,7 @@ import psycopg2
 import numpy as np
 import pandas as pd
 import re
+import os
 
 app = FastAPI()
 
@@ -96,12 +97,18 @@ def save_to_sql(data: PatientData, prediction: int):
     conn = None
     cursor = None
     try:
+        db_host = os.getenv("DB_HOST", "db")
+        db_name = os.getenv("DB_NAME", "mydb")
+        db_user = os.getenv("DB_USER", "admin")
+        db_password = os.getenv("DB_PASSWORD", "123456")
+        db_port = int(os.getenv("DB_PORT", "5432"))
+
         conn = psycopg2.connect(
-            host="192.168.1.104",
-            database="mydb",
-            user="admin",
-            password="123456",
-            port=5432
+            host=db_host,
+            database=db_name,
+            user=db_user,
+            password=db_password,
+            port=db_port
         )
         cursor = conn.cursor()
         
